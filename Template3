@@ -25,7 +25,17 @@
 </template>
 
 <script setup>
-import {computed, nextTick, reactive, ref} from "vue";
+import {
+  computed,
+  nextTick,
+  onBeforeMount,
+  onBeforeUnmount,
+  onMounted,
+  onUnmounted,
+  onUpdated,
+  reactive,
+  ref, watch
+} from "vue";
 import Child from "@/components/Child";
 
 const ref1 = ref(0); // 响应式变量
@@ -43,7 +53,15 @@ const computed1 = computed(() => { // computed计算属性，用于响应式依�
   return ref2.value.name ? 'Yes' : 'No'; //计算属性中使用 reverse() 和 sort() 的时候务必小心！这两个方法将变更原始数组，计算函数中不应该这么做。
                                          // 请在调用这些方法之前创建一个原数组的副本：return [...numbers].reverse()
 })
-
+watch(                                  // 监听函数，在监听值发生变化时执行
+  ref1,                                 // 可以监听ref/value/array等，value：() => {ref1.value}，array：[ref1, ref2]
+  (newVal, oldVal) => {
+    return newVal > oldVal;
+  },
+  {
+      deep: true,
+      immediate: true,
+  },)
 // eslint-disable-next-line no-unused-vars
 const asyncFunc = async function () { // 声明是异步方法，注意：async方法返回的是promise对象，不能直接拿来比较！得用then或者await接受结果
   let i = await asyncFunc(); // await能让异步方法等待，拿到结果再继续流程
@@ -54,6 +72,12 @@ const asyncFunc = async function () { // 声明是异步方法，注意：async�
   }
   return i;
 };
+
+onBeforeMount(()=>{}) // 注册一个钩子，在组件被挂载之前被调用。
+onMounted(()=>{}) // 注册一个回调函数，在组件挂载完成后执行。
+onUpdated(()=>{}) // 注册一个回调函数，在组件因为响应式状态变更而更新其 DOM 树之后调用。
+onBeforeUnmount(()=>{}) // 注册一个钩子，在组件实例被卸载之前调用。
+onUnmounted(()=>{}) // 注册一个回调函数，在组件实例被卸载之后调用。
 </script>
 
 <style scoped>
