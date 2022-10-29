@@ -27,6 +27,7 @@
 <script setup>
 import {
   computed,
+  defineProps,
   nextTick,
   onBeforeMount,
   onBeforeUnmount,
@@ -55,13 +56,25 @@ const computed1 = computed(() => { // computed计算属性，用于响应式依�
 })
 watch(                                  // 监听函数，在监听值发生变化时执行
   ref1,                                 // 可以监听ref/value/array等，value：() => {ref1.value}，array：[ref1, ref2]
-  (newVal, oldVal) => {
-    return newVal > oldVal;
+  (newVal, oldVal) => {             // 监听ref会自动深度监听，监听value只有对象被替换时才会触发，可以手动加deep
+    return newVal > oldVal;             // 监听最好不要放异步回调里，否则需要手动销毁：const a = watch();a();
   },
   {
       deep: true,
       immediate: true,
   },)
+
+// eslint-disable-next-line no-unused-vars
+const props = defineProps({
+  value1: {
+    type: Number,
+    default: 1,
+  },
+  value2: {
+    type: Function,
+  },
+});
+
 // eslint-disable-next-line no-unused-vars
 const asyncFunc = async function () { // 声明是异步方法，注意：async方法返回的是promise对象，不能直接拿来比较！得用then或者await接受结果
   let i = await asyncFunc(); // await能让异步方法等待，拿到结果再继续流程
