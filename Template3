@@ -18,8 +18,12 @@
   <div @keyup.enter="xxx"></div> <!-- 按键事件触发 -->
   <div @keydown.alt="xxx"></div>
 
+  <!-- title和key是该组件传递给子组件props的参数，使用:可以动态绑定，用于父→子参数传递 -->
+  <!-- @abc是子组件$emit事件传递给该组件的，该组件使用method接收结果，用于子→父参数传递 -->
+  <child title="xxx" :key="xxx" @abc="method"></child>
+
   <div>
-    <p>{{computed1}}</p>
+    <p>{{ computed1 }}</p>
   </div>
   <child :ref1="ref1" :reactive1="reactive1"></child>
 </template>
@@ -28,6 +32,7 @@
 import {
   computed,
   defineProps,
+  defineEmits,
   nextTick,
   onBeforeMount,
   onBeforeUnmount,
@@ -40,8 +45,8 @@ import {
 import Child from "@/components/Child";
 
 const ref1 = ref(0); // 响应式变量
-const ref2 = ref({name:'Tom',age:15}); // 响应式变量
-const reactive1 = reactive({value:0}); // 只能用于对象类型
+const ref2 = ref({name: 'Tom', age: 15}); // 响应式变量
+const reactive1 = reactive({value: 0}); // 只能用于对象类型
 const func1 = function () {
   nextTick(() => {
     // 放入到nextTick的回调函数里能保证在下一次DOM刷新后再执行里面的内容
@@ -55,17 +60,16 @@ const computed1 = computed(() => { // computed计算属性，用于响应式依�
                                          // 请在调用这些方法之前创建一个原数组的副本：return [...numbers].reverse()
 })
 watch(                                  // 监听函数，在监听值发生变化时执行
-  ref1,                                 // 可以监听ref/value/array等，value：() => {ref1.value}，array：[ref1, ref2]
-  (newVal, oldVal) => {             // 监听ref会自动深度监听，监听value只有对象被替换时才会触发，可以手动加deep
-    return newVal > oldVal;             // 监听最好不要放异步回调里，否则需要手动销毁：const a = watch();a();
-  },
-  {
+    ref1,                                 // 可以监听ref/value/array等，value：() => {ref1.value}，array：[ref1, ref2]
+    (newVal, oldVal) => {             // 监听ref会自动深度监听，监听value只有对象被替换时才会触发，可以手动加deep
+      return newVal > oldVal;             // 监听最好不要放异步回调里，否则需要手动销毁：const a = watch();a();
+    },
+    {
       deep: true,
       immediate: true,
-  },)
+    },)
 
-// eslint-disable-next-line no-unused-vars
-const props = defineProps({
+const props = defineProps({       // 用于接收父组件传入的数据
   value1: {
     type: Number,
     default: 1,
@@ -75,7 +79,12 @@ const props = defineProps({
   },
 });
 
-// eslint-disable-next-line no-unused-vars
+const emits = defineEmits(['emit1', 'emit2']);   // 用于定义发送给父组件的事件
+const emitFunc = function () {
+  emits('emit1', 'res')                          // 发送事件
+}
+emitFunc();
+
 const asyncFunc = async function () { // 声明是异步方法，注意：async方法返回的是promise对象，不能直接拿来比较！得用then或者await接受结果
   let i = await asyncFunc(); // await能让异步方法等待，拿到结果再继续流程
   if (i === 1) {
@@ -86,12 +95,22 @@ const asyncFunc = async function () { // 声明是异步方法，注意：async�
   return i;
 };
 
-onBeforeMount(()=>{}) // 注册一个钩子，在组件被挂载之前被调用。
-onMounted(()=>{}) // 注册一个回调函数，在组件挂载完成后执行。
-onUpdated(()=>{}) // 注册一个回调函数，在组件因为响应式状态变更而更新其 DOM 树之后调用。
-onBeforeUnmount(()=>{}) // 注册一个钩子，在组件实例被卸载之前调用。
-onUnmounted(()=>{}) // 注册一个回调函数，在组件实例被卸载之后调用。
+onBeforeMount(() => {
+}) // 注册一个钩子，在组件被挂载之前被调用。
+onMounted(() => {
+}) // 注册一个回调函数，在组件挂载完成后执行。
+onUpdated(() => {
+}) // 注册一个回调函数，在组件因为响应式状态变更而更新其 DOM 树之后调用。
+onBeforeUnmount(() => {
+}) // 注册一个钩子，在组件实例被卸载之前调用。
+onUnmounted(() => {
+}) // 注册一个回调函数，在组件实例被卸载之后调用。
 </script>
 
-<style scoped>
+<!-- scoped，只能在该vue文件范围内进行使用，避免污染外部样式 -->
+<style scoped></style>
+<!-- css 可以使用外部引入的方式，@默认为src目录，~@不需要加后缀格式，@需要加后缀格式 -->
+<!-- scss有层级关系，跟平铺的css样式不同，同样可以限制样式范围避免污染 -->
+<style lang="scss">
+import '@/xxx/xxx.scss';
 </style>
