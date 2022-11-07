@@ -47,7 +47,7 @@ import {
   onUnmounted,
   onUpdated,
   reactive,
-  ref, watch
+  ref, watch, provide, inject
 } from "vue";
 import Child from "@/components/Child";
 
@@ -91,6 +91,9 @@ const emitFunc = function () {
   emits('emit1', 'res')                          // 发送事件
 }
 emitFunc();
+
+provide('ref1', ref1);  // 将该参数传递到深层级子组件
+const mes = inject('ref1')  // 获取父组件传递的数据，一般如果要修改父组件的值，建议在父组件中定义方法，子组件调用，保持数据更改来源一致性
 
 const asyncFunc = async function () { // 声明是异步方法，注意：async方法返回的是promise对象，不能直接拿来比较！得用then或者await接受结果
   let i = await asyncFunc(); // await能让异步方法等待，拿到结果再继续流程
