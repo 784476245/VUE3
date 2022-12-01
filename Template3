@@ -72,11 +72,11 @@ import Child from "@/components/Child";
  * 响应式变量定义和使用
  */
 const ref1 = ref({name: 'Tom', age: 15}); // 响应式变量，操作时需要携带value：ref.value.name
-const reactive1 = reactive({value: 0});  // 只能用于对象类型的响应式变量，不可用于string/number等基本类型，
-                                                // 注意：reactive重新赋值,就会丢失原来响应式对象的引用地址,变成一个新的引用地址（例：reactive = xxx）
+const reactive1 = reactive({value: 0});   // 只能用于对象类型的响应式变量，不可用于string/number等基本类型，
+                                          // 注意：reactive重新赋值,就会丢失原来响应式对象的引用地址,变成一个新的引用地址（例：reactive = xxx）
 
-const ref2 = ref();                             // 对应上方模板中ref="ref2"的定义，在此处定义后可以使用子组件暴露出来的方法和变量
-defineExpose({ ref1 })                  // 定义暴露成员，可被父组件使用
+const ref2 = ref();                       // 对应上方模板中ref="ref2"的定义，在此处定义后可以使用子组件暴露出来的方法和变量
+defineExpose({ ref1 })                    // 定义暴露成员，可被父组件使用
 
 /**
  * 接收父组件传入的数据
@@ -118,7 +118,7 @@ const computed1 = computed(() => {
 /**
  * watch 监听函数，在监听值发生变化时执行
  */
-watch(ref1, (newVal, oldVal) => {     // 可以监听ref/value/array等，value：() => {ref1.value}，array：[ref1, ref2]
+watch(ref1, (newVal, oldVal) => {         // 可以监听ref/value/array等，value：() => {ref1.value}，array：[ref1, ref2]
                                           // 监听ref会自动深度监听，监听value只有对象被替换时才会触发，可以手动加deep
       return newVal > oldVal;             // 监听最好不要放异步回调里，否则需要手动销毁：const a = watch();a();
     },
