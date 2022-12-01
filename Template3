@@ -1,13 +1,12 @@
 <template>
-  <el-button @click="func1()"></el-button>
-  <div v-for="item in ref2" :key="item.id"> <!-- v-for实现循环一般都需要带上key，方便跟踪节点和排序 -->
-    <!-- 内容 -->
-  </div>
+  <!-- 属性绑定，v-bind:可缩写为: -->
+  <!-- 可使用动态参数[xxx]，属性类型随着xxx名称改变而改变；若xxx="href"，则为:href -->
+  <div v-bind:class="x" :id="x" :[xxx]="x" :title="x"></div>
 
-  <!-- 使用特殊的 $event 变量，将时间属性传递到script中进行处理 -->
-  <button @click="func1('Form cannot be submitted yet.', $event)">
-    Submit
-  </button>
+  <!-- 事件绑定，v-on:可缩写为@ -->
+  <!-- 可使用动态参数[xxx]，事件类型随着xxx名称改变而改变；若xxx="blur"，则为@blur -->
+  <div v-on:click="x" @change="x" @[xxx]="x"></div>
+
   <!-- 事件处理常用后缀 -->
   <!-- .stop：阻止冒泡（通俗讲就是阻止事件向上级DOM元素传递） -->
   <!-- .prevent：阻止默认事件的发生 -->
@@ -18,8 +17,22 @@
   <div @keyup.enter="xxx"></div> <!-- 按键事件触发 -->
   <div @keydown.alt="xxx"></div>
 
-  <!-- title和key是该组件传递给子组件props的参数，使用:可以动态绑定，用于父→子参数传递 -->
-  <!-- @abc是子组件$emit事件传递给该组件的，该组件使用method接收结果，用于子→父参数传递 -->
+  <!-- v-html用于内嵌html页面，不安全（使用v-dompurify-html代替） -->
+  <div v-dompurify-html="x"></div>
+
+  <!-- v-for实现循环，一般都需要带上key，方便跟踪节点和排序 -->
+  <div v-for="item in ref2" :key="item.id">
+    <!-- 内容 -->
+  </div>
+
+  <!-- 使用特殊的 $event 变量，将事件属性传递到script中进行处理 -->
+  <button @click="func1('Form cannot be submitted yet.', $event)">
+    Submit
+  </button>
+
+  <!-- 跨组件参数传递 -->
+  <!-- 例：title和key是该组件传递给子组件props的参数，使用:可以动态绑定，用于父→子参数传递 -->
+  <!-- 例：@abc是子组件$emit事件传递给该组件的，该组件使用method方法接收结果，用于子→父参数传递 -->
   <child title="xxx" :key="xxx" @abc="method"></child>
 
   <!-- 插槽定义 -->
@@ -29,10 +42,13 @@
     <template #xxx></template>
   </child>
 
+  <!-- {{xxx}}，常用于计算属性和数据动态展示 -->
   <div>
     <p>{{ computed1 }}</p>
   </div>
-  <child :ref1="ref1" :reactive1="reactive1"></child>
+
+  <!-- 添加ref属性可使用子组件内部属性 -->
+  <xx-xx ref="ref2"></xx-xx>
 </template>
 
 <script setup>
@@ -40,6 +56,7 @@ import {
   computed,
   defineProps,
   defineEmits,
+  defineExpose,
   nextTick,
   onBeforeMount,
   onBeforeUnmount,
@@ -51,32 +68,20 @@ import {
 } from "vue";
 import Child from "@/components/Child";
 
-const ref1 = ref(0); // 响应式变量
-const ref2 = ref({name: 'Tom', age: 15}); // 响应式变量
-const reactive1 = reactive({value: 0}); // 只能用于对象类型
-const func1 = function () {
-  nextTick(() => {
-    // 放入到nextTick的回调函数里能保证在下一次DOM刷新后再执行里面的内容
-    // 多用于：1.页面还没初始化完成（created/mounted）；2.同步流程中改变元素但是无法同步获取，放到该方法里异步刷新DOM后再执行逻辑
-    ref1.value += 1;
-    reactive1.value += 1;
-  })
-}
-const computed1 = computed(() => { // computed计算属性，用于响应式依赖发生变化时同步刷新该变量，常用于模板动态刷新
-  return ref2.value.name ? 'Yes' : 'No'; //计算属性中使用 reverse() 和 sort() 的时候务必小心！这两个方法将变更原始数组，计算函数中不应该这么做。
-                                         // 请在调用这些方法之前创建一个原数组的副本：return [...numbers].reverse()
-})
-watch(                                  // 监听函数，在监听值发生变化时执行
-    ref1,                                 // 可以监听ref/value/array等，value：() => {ref1.value}，array：[ref1, ref2]
-    (newVal, oldVal) => {             // 监听ref会自动深度监听，监听value只有对象被替换时才会触发，可以手动加deep
-      return newVal > oldVal;             // 监听最好不要放异步回调里，否则需要手动销毁：const a = watch();a();
-    },
-    {
-      deep: true,
-      immediate: true,
-    },)
+/**
+ * 响应式变量定义和使用
+ */
+const ref1 = ref({name: 'Tom', age: 15}); // 响应式变量，操作时需要携带value：ref.value.name
+const reactive1 = reactive({value: 0});  // 只能用于对象类型的响应式变量，不可用于string/number等基本类型，
+                                                // 注意：reactive重新赋值,就会丢失原来响应式对象的引用地址,变成一个新的引用地址（例：reactive = xxx）
 
-const props = defineProps({       // 用于接收父组件传入的数据
+const ref2 = ref();                             // 对应上方模板中ref="ref2"的定义，在此处定义后可以使用子组件暴露出来的方法和变量
+defineExpose({ ref1 })                  // 定义暴露成员，可被父组件使用
+
+/**
+ * 接收父组件传入的数据
+ */
+const props = defineProps({
   value1: {
     type: Number,
     default: 1,
@@ -85,25 +90,61 @@ const props = defineProps({       // 用于接收父组件传入的数据
     type: Function,
   },
 });
-
-const emits = defineEmits(['emit1', 'emit2']);   // 用于定义发送给父组件的事件
-const emitFunc = function () {
-  emits('emit1', 'res')                          // 发送事件
+/**
+ * 定义发送给父组件的事件
+ */
+const emits = defineEmits(['emit1', 'emit2']);
+const emitFunc = ()=> {
+  emits('emit1', 'res') // 发送事件
 }
-emitFunc();
+/**
+ * 定义发送给子孙组件的数据
+ */
+provide('ref1', ref1);           // 将该参数传递到深层级子组件
+/**
+ * 接收祖先组件传入的数据
+ */
+const mes = inject('ref1')  // 获取祖先组件传递的数据，一般如果要修改父组件的值，建议在父组件中定义方法，子组件调用，保持数据更改来源一致性
 
-provide('ref1', ref1);  // 将该参数传递到深层级子组件
-const mes = inject('ref1')  // 获取父组件传递的数据，一般如果要修改父组件的值，建议在父组件中定义方法，子组件调用，保持数据更改来源一致性
+/**
+ * computed 计算属性，用于响应式依赖发生变化时同步刷新该变量，常用于模板动态刷新
+ * @type {ComputedRef<string>}
+ */
+const computed1 = computed(() => {
+  return ref2.value.name ? 'Yes' : 'No'; //计算属性中使用 reverse() 和 sort() 的时候务必小心！这两个方法将变更原始数组，计算函数中不应该这么做。
+                                         // 请在调用这些方法之前创建一个原数组的副本：return [...numbers].reverse()
+})
 
-const asyncFunc = async function () { // 声明是异步方法，注意：async方法返回的是promise对象，不能直接拿来比较！得用then或者await接受结果
-  let i = await asyncFunc(); // await能让异步方法等待，拿到结果再继续流程
-  if (i === 1) {
-    console.log("相等"); // 1
-  } else {
-    console.log("不相等");
-  }
-  return i;
+/**
+ * watch 监听函数，在监听值发生变化时执行
+ */
+watch(ref1, (newVal, oldVal) => {     // 可以监听ref/value/array等，value：() => {ref1.value}，array：[ref1, ref2]
+                                          // 监听ref会自动深度监听，监听value只有对象被替换时才会触发，可以手动加deep
+      return newVal > oldVal;             // 监听最好不要放异步回调里，否则需要手动销毁：const a = watch();a();
+    },
+    {
+      deep: true,                         // 是否使用深度监听
+      immediate: true,                    // 初始化时是否生效
+    },)
+
+/**
+ * 异步调用
+ */
+const asyncFunc = async ()=> { // 声明是异步方法，注意：async方法返回的是promise对象，不能直接拿来比较！得用then或者await接受结果
+  let i = await asyncFunc();   // await能让异步方法等待，拿到结果再继续流程，只能放在async方法里
 };
+
+/**
+ * DOM 更新循环结束之后执行延迟回调
+ */
+const func1 = ()=> {
+  nextTick(() => {
+    // 放入到nextTick的回调函数里能保证在下一次DOM刷新后再执行里面的内容
+    // 多用于：1.页面还没初始化完成（created/mounted）；2.同步流程中改变元素但是无法同步获取，放到该方法里异步刷新DOM后再执行逻辑
+    ref1.value += 1;
+    reactive1.value += 1;
+  })
+}
 
 onBeforeMount(() => {
 }) // 注册一个钩子，在组件被挂载之前被调用。
